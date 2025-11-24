@@ -1,8 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import SessionList from './components/SessionList';
 import SessionDetail from './components/SessionDetail';
-import NtpRequests from './components/NtpRequests';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ProtectedRoute } from './auth/ProtectedRoute';
@@ -22,7 +21,6 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<ProtectedRoute><SessionList /></ProtectedRoute>} />
               <Route path="/sessions/:id" element={<ProtectedRoute><SessionDetail /></ProtectedRoute>} />
-              <Route path="/ntp" element={<ProtectedRoute><NtpRequests /></ProtectedRoute>} />
             </Routes>
           </main>
         </div>
@@ -44,8 +42,7 @@ function Navigation() {
   return (
     <nav className="main-nav">
       <ul>
-        <li><NavLink to="/" className={({ isActive }) => isActive ? "active" : ""}>SSH Sessions</NavLink></li>
-        <li><NavLink to="/ntp" className={({ isActive }) => isActive ? "active" : ""}>NTP Requests</NavLink></li>
+        <li><span className="nav-title">SSH Honeypot Monitor</span></li>
       </ul>
       <button onClick={logout} className="logout-button">Logout</button>
     </nav>

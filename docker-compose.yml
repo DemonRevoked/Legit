@@ -1,5 +1,4 @@
 services:
-#=============IT HONEYPOTS============================================
   ssh-honeypot:
     build: ./honeypots/ssh-hp
     container_name: ssh-honeypot
@@ -7,39 +6,7 @@ services:
       - "2222:22"
     restart: always
     volumes:
-      - ./ttylogs:/var/log/tty      # bind host ./ttylogs → container
-
-  ntp-honeypot:
-    build: ./honeypots/ntp-hp
-    container_name: ntp-honeypot
-    cap_add:
-      - SYS_TIME
-    restart: always
-    ports:
-      - "123:123/udp"
-    volumes:
-      - ./logs:/var/log/ntp
-
-#=============OT HONEYPOTS=========================================
-  siemens-honeypot:
-    build: ./honeypots/Siemens
-    container_name: siemens-honeypot
-    ports:
-      - "5020:502" # Modbus TCP default port
-    restart: always
-    volumes:
-      - ./siemens_logs:/app/logs # Mount a dedicated logs directory
-
-  honeywell-honeypot:
-    build: ./honeypots/honeywell-hp
-    container_name: honeywell-honeypot
-    ports:
-      - "5021:502" # Modbus TCP default port
-    restart: always
-    volumes:
-      - ./honeywell_logs:/app/logs # Mount a dedicated logs directory
-
-#==================================================================
+      - ./ttylogs:/var/log/tty
   mongo:
     image: mongo:4.4
     container_name: mongo
@@ -57,26 +24,12 @@ services:
       - ssh-honeypot
       - mongo
     volumes:
-      - ./ttylogs:/data/ttylogs     # ← bind the very same host folder here
+      - ./ttylogs:/data/ttylogs
       - ./rawlogs:/data/raw
       - ./jsonlogs:/data/json
     environment:
       - MONGO_URI=mongodb://mongo:27017/ttylogs
       - SCAN_INTERVAL=10
-
-  ntp-parser:
-    build: ./ntp-parser
-    container_name: ntp-parser
-    restart: always
-    depends_on:
-      - ntp-honeypot
-      - mongo
-    volumes:
-      - ./logs:/data # Mount the NTP log directory
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/ttylogs
-      - SCAN_INTERVAL=10
-      - NTP_LOG_FILE=/data/peerstats
 
   backend:
     build: ./backend
@@ -102,12 +55,11 @@ services:
     restart: always
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Use an anonymous volume to prevent host node_modules from overwriting container's
+      - /app/node_modules
     depends_on:
       - backend
     environment:
-      - CHOKIDAR_USEPOLLING=true # Necessary for hot-reloading to work inside Docker
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "3000:3000"
 
-# no named volumes needed if you bind-mount host folders

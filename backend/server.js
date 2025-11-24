@@ -26,7 +26,6 @@ app.use(bodyParser.json());
   await client.connect();
   const db           = client.db();
   const sessionsCol  = db.collection('sessions');
-  const ntpCol       = db.collection('ntp_requests');
   const analysisCol  = db.collection('analyses');
   const openai       = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -110,16 +109,6 @@ app.use(bodyParser.json());
     } catch (e) {
       console.error(`Error fetching session ${req.params.id}:`, e);
       res.status(500).json({ error: 'Failed to fetch session' });
-    }
-  });
-
-  // fetch ntp logs. Renamed from /ntp_requests to avoid ad-blocker issues.
-  app.get('/api/ntp-logs', verifyToken, async (req, res) => {
-    try {
-      const requests = await ntpCol.find().sort({ timestamp: -1 }).toArray();
-      res.json(requests);
-    } catch (e) {
-      res.status(500).json({ error: 'Failed to fetch NTP requests' });
     }
   });
 
