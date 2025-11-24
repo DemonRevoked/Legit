@@ -1,0 +1,126 @@
+import socket
+import threading
+import time
+from datetime import datetime
+
+# === CONFIGURATION ===
+DEVICE_INFO = {
+    "vendor": "Honeywell",
+    "model": "HC900",
+    "firmware": "3.1.7"
+}
+
+HOLDING_REGISTERS = {
+    "0": 100,
+    "1": 200,
+    "10": 999,
+    "99": 777
+}
+
+DYNAMIC_REGISTERS = {
+    "0": {"start_value": 100, "step": 5, "max": 150}
+}
+
+LOGFILE = "honeypot_log.txt"
+LOCK = threading.Lock()
+
+# === LOGGING ===
+def log_event(ip, fc, start, note):
+    with open(LOGFILE, "a") as f:
+        f.write(f"[{datetime.now()}] {ip} FC:{fc} Start:{start} | {note}\n")
+
+# === PACKET HELPERS ===
+def build_response(tid, uid, payload):
+    length = len(payload) + 1
+    header = tid + b'\x00\x00' + length.to_bytes(2, 'big') + bytes([uid])
+    return header + payload
+
+def build_exception(tid, uid, fc, code=0x01):
+    return build_response(tid, uid, bytes([fc | 0x80, code]))
+
+# === FUNCTION HANDLERS ===
+def handle_read_holding(tid, uid, start, qty):
+    with LOCK:
+        values = [HOLDING_REGISTERS.get(str(i), 0) for i in range(start, start + qty)]
+    payload = b'\x03' + bytes([qty * 2]) + b''.join(val.to_bytes(2, 'big') for val in values)
+    return build_response(tid, uid, payload)
+
+def handle_report_slave_id(tid, uid, addr):
+    ident = f"{DEVICE_INFO['vendor']} {DEVICE_INFO['model']}".encode()
+    payload = b'\x11' + bytes([len(ident)]) + ident
+    log_event(addr[0], 0x11, 0, "Report Slave ID")
+    return build_response(tid, uid, payload)
+
+def handle_device_id(tid, uid, addr):
+    objects = [
+        (0x00, DEVICE_INFO["vendor"]),
+        (0x01, DEVICE_INFO["model"]),
+        (0x02, DEVICE_INFO["firmware"])
+    ]
+    response = bytearray([
+        0x2B, 0x0E, 0x01,  # FC, MEI type, Read Device ID
+        0x01,  # Conformity level (basic)
+        0x00,  # More follows
+        0x00,  # Next object ID
+        len(objects)
+    ])
+    for obj_id, val in objects:
+        encoded = val.encode()
+        response.extend([obj_id, len(encoded)])
+        response.extend(encoded)
+
+    log_event(addr[0], 0x2B, 0, "Device Identification")
+    return build_response(tid, uid, response)
+
+# === DYNAMIC UPDATER ===
+def dynamic_register_updater():
+    while True:
+        time.sleep(5)
+        with LOCK:
+            for reg, rule in DYNAMIC_REGISTERS.items():
+                current = HOLDING_REGISTERS.get(reg, rule["start_value"])
+                next_val = current + rule["step"]
+                HOLDING_REGISTERS[reg] = rule["start_value"] if next_val > rule["max"] else next_val
+
+# === MAIN SERVER LOOP ===
+def start_server():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("0.0.0.0", 502))
+    sock.listen(5)
+
+    print(f"[*] Honeywell HC900 Honeypot listening on port 502")
+
+    while True:
+        conn, addr = sock.accept()
+        try:
+            data = conn.recv(1024)
+            if len(data) < 8:
+                conn.close(); continue
+
+            tid, uid, fc = data[0:2], data[6], data[7]
+
+            if fc == 0x03 and len(data) >= 12:
+                start = int.from_bytes(data[8:10], 'big')
+                qty = int.from_bytes(data[10:12], 'big')
+                conn.sendall(handle_read_holding(tid, uid, start, qty))
+
+            elif fc == 0x11:
+                conn.sendall(handle_report_slave_id(tid, uid, addr))
+
+            elif fc == 0x2B and len(data) >= 9 and data[8] == 0x0E:
+                conn.sendall(handle_device_id(tid, uid, addr))
+
+            else:
+                log_event(addr[0], fc, 0, "Unsupported FC")
+                conn.sendall(build_exception(tid, uid, fc))
+
+        except Exception as e:
+            print(f"[!] Error from {addr}: {e}")
+        finally:
+            conn.close()
+
+# === ENTRY POINT ===
+if __name__ == "__main__":
+    threading.Thread(target=dynamic_register_updater, daemon=True).start()
+    start_server()

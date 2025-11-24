@@ -1,0 +1,11 @@
+Script started on 2025-06-20 10:01:09+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="252" LINES="67"]
+]0;root@70dd96ac9c25: ~root@70dd96ac9c25:~# ls
+[0m[01;34mhello[0m
+]0;root@70dd96ac9c25: ~root@70dd96ac9c25:~# cd hello
+]0;root@70dd96ac9c25: ~/helloroot@70dd96ac9c25:~/hello# ls
+]0;root@70dd96ac9c25: ~/helloroot@70dd96ac9c25:~/hello# whoami
+root
+]0;root@70dd96ac9c25: ~/helloroot@70dd96ac9c25:~/hello# exit
+exit
+
+Script done on 2025-06-20 10:01:42+00:00 [COMMAND_EXIT_CODE="0"]

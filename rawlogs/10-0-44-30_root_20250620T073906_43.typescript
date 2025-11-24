@@ -1,0 +1,22 @@
+Script started on 2025-06-20 07:39:06+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="131" LINES="27"]
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# hello
+bash: hello: command not found
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# echo hello
+hello
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# cd    mkdir newthing
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# cd    c at n    cd newthing/
+]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# mkdir     nano hello  .txt
+bash: nano: command not found
+]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# echo "how are you  " > hello.txt
+]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# ls
+hello.txt
+]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# cat c hello.txt 
+how are you
+]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# clear
+[H[2J[3J]0;root@acde57b8e6a2: ~/newthingroot@acde57b8e6a2:~/newthing# ex  cd ..
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# rm -rf *
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# ls
+]0;root@acde57b8e6a2: ~root@acde57b8e6a2:~# exit
+exit
+
+Script done on 2025-06-20 07:39:52+00:00 [COMMAND_EXIT_CODE="0"]
